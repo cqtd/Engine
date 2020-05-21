@@ -5,7 +5,7 @@ GraphicsClass::GraphicsClass()
 	m_D3D = nullptr;
 	m_Camera = nullptr;
 	m_Model = nullptr;
-	m_ColorShader = nullptr;
+	m_TextureShader = nullptr;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass&)
@@ -47,23 +47,24 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	result = m_Model->Initialize(m_D3D->GetDevice());
+	WCHAR tex[] = L"../Engine/data/seafloor.dds";
+	result = m_Model->Initialize(m_D3D->GetDevice(), tex);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	m_ColorShader = new ColorShaderClass;
-	if (!m_ColorShader)
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
 	{
 		return false;
 	}
 
-	result = m_ColorShader->Initialize(m_D3D->GetDevice(), hwnd);
+	result = m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd);
 	if (!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
 		return false;
 	}
 	
@@ -72,11 +73,11 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {
-	if (m_ColorShader)
+	if (m_TextureShader)
 	{
-		m_ColorShader->Shutdown();
-		delete m_ColorShader;
-		m_ColorShader = nullptr;
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = nullptr;
 	}
 
 	if (m_Model)
@@ -98,6 +99,8 @@ void GraphicsClass::Shutdown()
 		delete m_D3D;
 		m_D3D = nullptr;
 	}
+
+	return;
 }
 
 bool GraphicsClass::Frame()
@@ -127,10 +130,11 @@ bool GraphicsClass::Render()
 
 	m_Model->Render(m_D3D->GetDeviceContext());
 
-	result = m_ColorShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), world, view, projection);
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), world, view, projection, m_Model->GetTexture());
 	if (!result)
 	{
 		return false;
+
 	}
 
 	m_D3D->EndScene();
