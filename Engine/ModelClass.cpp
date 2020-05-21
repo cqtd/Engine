@@ -19,7 +19,7 @@ bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename)
 {
 	bool result;
 
-	// »ï°¢ÇüÀ» À§ÇÑ Áö¿À¸ŞÆ®¸®¸¦ °áÁ¤ÇÏ´Â ¹öÅØ½º¿Í ÀÎµ¦½º ¹öÆÛ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+	// ì‚¼ê°í˜•ì„ ìœ„í•œ ì§€ì˜¤ë©”íŠ¸ë¦¬ë¥¼ ê²°ì •í•˜ëŠ” ë²„í…ìŠ¤ì™€ ì¸ë±ìŠ¤ ë²„í¼ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
 	result = InitializeBuffers(device);
 	if (!result)
 	{
@@ -27,7 +27,7 @@ bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename)
 	}
 
 
-	// ÀÌ ¸ğµ¨À» À§ÇØ ÅØ½ºÃÄ¸¦ ·ÎµåÇÕ´Ï´Ù.
+	// ì´ ëª¨ë¸ì„ ìœ„í•´ í…ìŠ¤ì³ë¥¼ ë¡œë“œí•©ë‹ˆë‹¤.
 	result = LoadTexture(device, textureFilename);
 	if (!result)
 	{
