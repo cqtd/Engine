@@ -5,7 +5,8 @@ GraphicsClass::GraphicsClass()
 	m_D3D = nullptr;
 	m_Camera = nullptr;
 	m_Model = nullptr;
-	m_TextureShader = nullptr;
+	m_LightShader = nullptr;
+	m_Light = nullptr;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass&)
@@ -55,29 +56,44 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	m_TextureShader = new TextureShaderClass;
-	if (!m_TextureShader)
+	m_LightShader = new LightShaderClass;
+	if (!m_LightShader)
 	{
 		return false;
 	}
 
-	result = m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd);
+	result = m_LightShader->Initialize(m_D3D->GetDevice(), hwnd);
 	if (!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
 		return false;
 	}
+
+	m_Light = new LightClass;
+	if (!m_Light)
+	{
+		return false;
+	}
+
+	m_Light->SetDiffuseColor(1.0f, 0.0f, 1.0f, 1.0f);
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 	
 	return true;
 }
 
 void GraphicsClass::Shutdown()
 {
-	if (m_TextureShader)
+	if (m_Light)
 	{
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = nullptr;
+		delete m_Light;
+		m_Light = nullptr;
+	}
+
+	if (m_LightShader)
+	{
+		m_LightShader->Shutdown();
+		delete m_LightShader;
+		m_LightShader = nullptr;
 	}
 
 	if (m_Model)
@@ -106,8 +122,15 @@ void GraphicsClass::Shutdown()
 bool GraphicsClass::Frame()
 {
 	bool result;
+	static float rotation = 0.0f;
 
-	result = Render();
+	rotation += (float)D3DX_PI * 0.01f;
+	if(rotation > 360.f)
+	{
+		rotation -= 360.0f;
+	}
+
+	result = Render(rotation);
 	if (!result)
 	{
 		return false;
@@ -116,21 +139,25 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
-bool GraphicsClass::Render()
+bool GraphicsClass::Render(float rotation)
 {
-	D3DXMATRIX world, view, projection;
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
 
 	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 	m_Camera->Render();
 
-	m_Camera->GetViewMatrix(view);
-	m_D3D->GetWorldMatrix(world);
-	m_D3D->GetProjectionMatrix(projection);
+	m_Camera->GetViewMatrix(viewMatrix);
+	m_D3D->GetWorldMatrix(worldMatrix);
+	m_D3D->GetProjectionMatrix(projectionMatrix);
 
+	D3DXMatrixRotationY(&worldMatrix, rotation);
 	m_Model->Render(m_D3D->GetDeviceContext());
 
-	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), world, view, projection, m_Model->GetTexture());
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix, 
+		m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+	
 	if (!result)
 	{
 		return false;
